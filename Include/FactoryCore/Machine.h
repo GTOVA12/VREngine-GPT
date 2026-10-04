@@ -58,6 +58,7 @@ namespace FactoryCore
 		double Velocity = 0.0;
 		double TransitionTime = 0.0;
 		bool Active = false;
+		bool Processed = false;
 		FaultCode Fault = FaultCode::None;
 	};
 

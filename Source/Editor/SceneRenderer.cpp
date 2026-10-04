@@ -18,8 +18,9 @@
 #include <donut/render/GBufferFillPass.h>
 #include <donut/render/LightProbeProcessingPass.h>
 #include <donut/render/SsaoPass.h>
-#include <donut/render/ToneMappingPasses.h>
+#include <FilmicToneMap.spirv.h>
 #include <json/json.h>
+#include <cgltf.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -102,6 +103,7 @@ namespace FactoryCore
 		std::shared_ptr<Engine::DirectionalLight> Sun;
 		std::map<ComponentId, std::shared_ptr<Engine::SceneGraphNode>> Nodes;
 		std::map<Engine::SceneGraphNode*, dm::double3> BaseTranslations;
+		std::map<Engine::SceneGraphNode*, dm::double3> BaseScalings;
 		std::map<ComponentId, std::string> Topology;
 		RenderSettings Settings;
 		std::string Error;
@@ -121,9 +123,14 @@ namespace FactoryCore
 		std::unique_ptr<Render::DeferredLightingPass> LightingPass;
 		std::unique_ptr<Render::ForwardShadingPass> ForwardPass;
 		std::unique_ptr<Render::SsaoPass> SsaoPass;
-		std::unique_ptr<Render::ToneMappingPass> TonePass;
+		nvrhi::ShaderHandle ToneShader;
+		nvrhi::BindingLayoutHandle ToneLayout;
+		nvrhi::BindingSetHandle ToneBindings;
+		nvrhi::GraphicsPipelineHandle TonePipeline;
 		std::unique_ptr<Render::EnvironmentMapPass> SkyPass;
 		nvrhi::TextureHandle Environment;
+		nvrhi::TextureHandle Background;
+		std::unique_ptr<Render::EnvironmentMapPass> BackgroundPass;
 		std::vector<std::shared_ptr<Engine::LightProbe>> Probes;
 		glm::mat4 ViewMatrix{ 1.0f };
 		glm::mat4 Projection{ 1.0f };
@@ -133,6 +140,9 @@ namespace FactoryCore
 		float Distance = 6.0f;
 		unsigned Width = 0;
 		unsigned Height = 0;
+		unsigned PickWidth = 0;
+		unsigned PickHeight = 0;
+		bool AutomaticSimulation = true;
 		uint32_t Frame = 0;
 
 		Implementation(nvrhi::IDevice* device, EditorSession& session, std::filesystem::path assets)
@@ -141,7 +151,9 @@ namespace FactoryCore
 		void Camera()
 		{
 			const glm::vec3 offset{ std::cos(Pitch) * std::sin(Yaw), std::sin(Pitch), std::cos(Pitch) * std::cos(Yaw) };
-			ViewMatrix = glm::lookAtLH(Target + offset * Distance, Target, glm::vec3(0, 1, 0));
+			// glTF world axes stay right-handed. Positive-forward camera space is required by Donut.
+			// The reflection is visible to PlanarView::IsMirrored, preserving front faces and readable UVs.
+			ViewMatrix = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1)) * glm::lookAtRH(Target + offset * Distance, Target, glm::vec3(0, 1, 0));
 			Projection = glm::perspectiveLH_ZO(glm::radians(50.0f), static_cast<float>(Width) / static_cast<float>(Height), 0.05f, 200.0f);
 			View.SetViewport(nvrhi::Viewport(static_cast<float>(Width), static_cast<float>(Height)));
 			// GLM column-major storage is the transposed row-major matrix used by Donut.
@@ -170,13 +182,21 @@ namespace FactoryCore
 			LdrFramebuffer = std::make_shared<Engine::FramebufferFactory>(Device);
 			LdrFramebuffer->RenderTargets = { Ldr };
 			SsaoPass = std::make_unique<Render::SsaoPass>(Device, Shaders, Common, Targets->Depth, Targets->GBufferNormals, Occlusion);
-			TonePass = std::make_unique<Render::ToneMappingPass>(Device, Shaders, Common, LdrFramebuffer, View, Render::ToneMappingPass::CreateParameters{});
-			Commands->open();
-			TonePass->ResetExposure(Commands, 0.5f);
-			Commands->close();
-			Device->executeCommandList(Commands);
+			nvrhi::BindingSetDesc toneBindings;
+			toneBindings.bindings = { nvrhi::BindingSetItem::PushConstants(0, 16), nvrhi::BindingSetItem::Texture_SRV(0, Hdr) };
+			ToneBindings = Device->createBindingSet(toneBindings, ToneLayout);
+			nvrhi::GraphicsPipelineDesc tonePipeline;
+			tonePipeline.VS = Common->m_FullscreenVS;
+			tonePipeline.PS = ToneShader;
+			tonePipeline.bindingLayouts = { ToneLayout };
+			tonePipeline.primType = nvrhi::PrimitiveType::TriangleStrip;
+			tonePipeline.renderState.rasterState.cullMode = nvrhi::RasterCullMode::None;
+			tonePipeline.renderState.depthStencilState.depthTestEnable = false;
+			tonePipeline.renderState.depthStencilState.depthWriteEnable = false;
+			TonePipeline = Device->createGraphicsPipeline(tonePipeline, LdrFramebuffer->GetFramebuffer(View)->getFramebufferInfo());
 			LightingPass->ResetBindingCache();
 			SkyPass = Environment ? std::make_unique<Render::EnvironmentMapPass>(Device, Shaders, Common, HdrFramebuffer, View, Environment) : nullptr;
+			BackgroundPass = std::make_unique<Render::EnvironmentMapPass>(Device, Shaders, Common, HdrFramebuffer, View, Background);
 		}
 
 		void LoadScene()
@@ -205,7 +225,7 @@ namespace FactoryCore
 				Json::Value floor;
 				floor["name"] = "Floor";
 				floor["model"] = document["models"].size();
-				document["models"].append((Assets / "Models/Floor.gltf").generic_string());
+				document["models"].append((Assets / "Models/CellFloor.gltf").generic_string());
 				document["graph"].append(floor);
 				TemporaryScene temporary;
 				{
@@ -216,13 +236,14 @@ namespace FactoryCore
 				auto textureCache = std::make_shared<Engine::TextureCache>(Device, FileSystem, nullptr);
 				textureCache->SetMaxTextureSize(4096);
 				auto replacement = std::make_shared<Engine::Scene>(Device, *Shaders, FileSystem, textureCache, nullptr, nullptr);
-				if (!replacement->Load(temporary.GetPath())) throw std::runtime_error("glTF scene import failed");
+				if (!replacement->LoadWithThreadPool(temporary.GetPath(), nullptr)) throw std::runtime_error("glTF scene import failed");
 				textureCache->ProcessRenderingThreadCommands(*Common, 0.f);
 				textureCache->LoadingFinished();
 				replacement->FinishedLoading(Frame);
 				auto graph = replacement->GetSceneGraph();
 				std::map<ComponentId, std::shared_ptr<Engine::SceneGraphNode>> nodes;
 				std::map<Engine::SceneGraphNode*, dm::double3> translations;
+				std::map<Engine::SceneGraphNode*, dm::double3> scalings;
 				for (const auto& [id, path] : topology)
 				{
 					(void)path;
@@ -230,12 +251,12 @@ namespace FactoryCore
 					if (!node || node->GetNumChildren() == 0) throw std::runtime_error("Imported model has no scene geometry");
 					nodes[id] = node;
 					for (Engine::SceneGraphWalker walker(node.get()); walker; walker.Next(true))
-						translations[walker.Get()] = walker->GetTranslation();
+						{ translations[walker.Get()] = walker->GetTranslation(); scalings[walker.Get()] = walker->GetScaling(); }
 				}
 				auto lightNode = std::make_shared<Engine::SceneGraphNode>();
 				lightNode->SetName("FactoryCore Sun");
 				auto sun = std::make_shared<Engine::DirectionalLight>();
-				sun->irradiance = 2.0f;
+				sun->irradiance = 1.2f;
 				sun->angularSize = Settings.SunAngle;
 				lightNode->SetLeaf(sun);
 				graph->Attach(graph->GetRootNode(), lightNode);
@@ -250,6 +271,7 @@ namespace FactoryCore
 				Scene = std::move(replacement);
 				Nodes = std::move(nodes);
 				BaseTranslations = std::move(translations);
+				BaseScalings = std::move(scalings);
 				Sun = std::move(sun);
 				Topology = std::move(topology);
 				Error.clear();
@@ -299,10 +321,21 @@ namespace FactoryCore
 						}
 						child->SetTranslation(translation);
 					}
+					if (child->GetName() == "ClampJaw" || child->GetName() == "ClampJawOpposite")
+					{
+						translation.z += state.Active ? (child->GetName() == "ClampJaw" ? .10 : -.10) : 0.0;
+						child->SetTranslation(translation);
+					}
+					if (child->GetName() == "BeltRoller")
+					{
+						const auto roller = glm::angleAxis(state.Position / .055, glm::dvec3(0, 0, 1)) * glm::angleAxis(-1.5707963267948966, glm::dvec3(0, 1, 0));
+						child->SetRotation(dm::dquat(roller.w, roller.x, roller.y, roller.z));
+					}
+					if (child->GetName() == "Processed") child->SetScaling(state.Processed ? dm::double3(1.0) : dm::double3(0.00001));
 					if (child->GetName() == "Fault")
-						child->SetScaling(state.Fault == FaultCode::None ? dm::double3(0.00001) : dm::double3(0.06, 0.04, 0.06));
+						child->SetScaling(state.Fault == FaultCode::None ? dm::double3(0.00001) : BaseScalings.at(child));
 					if (child->GetName() == "Indicator")
-						child->SetScaling(state.Active ? dm::double3(.045, .015, .045) : dm::double3(.015, .005, .015));
+						child->SetScaling(BaseScalings.at(child) * (state.Active ? 1.0 : .55));
 				}
 			}
 			Sun->angularSize = Settings.SunAngle;
@@ -311,8 +344,13 @@ namespace FactoryCore
 	};
 
 	SceneRenderer::SceneRenderer(donut::app::DeviceManager* manager, EditorSession& session, std::filesystem::path assets)
-		: IRenderPass(manager), m_Impl(std::make_unique<Implementation>(manager->GetDevice(), session, std::move(assets))) {}
-	SceneRenderer::~SceneRenderer() = default;
+		: IRenderPass(manager), m_Impl(std::make_unique<Implementation>(manager->GetDevice(), session, std::move(assets)))
+	{
+	}
+	SceneRenderer::~SceneRenderer()
+	{
+		m_Impl->Device->waitForIdle();
+	}
 
 	void SceneRenderer::Initialize()
 	{
@@ -323,7 +361,12 @@ namespace FactoryCore
 		impl.Textures = std::make_shared<Engine::TextureCache>(impl.Device, impl.FileSystem, nullptr);
 		impl.Textures->SetMaxTextureSize(4096);
 		impl.Commands = impl.Device->createCommandList();
-		impl.Shadow = std::make_shared<Render::CascadedShadowMap>(impl.Device, 2048, 4, 0, nvrhi::Format::D32);
+		impl.Background = Texture(impl.Device, 1, 1, nvrhi::Format::RGBA16_FLOAT, "FactoryCore studio backdrop");
+		impl.Commands->open();
+		impl.Commands->clearTextureFloat(impl.Background, nvrhi::AllSubresources, nvrhi::Color(.22f, .26f, .29f, 1.f));
+		impl.Commands->close();
+		impl.Device->executeCommandList(impl.Commands);
+		impl.Shadow = std::make_shared<Render::CascadedShadowMap>(impl.Device, 4096, 4, 0, nvrhi::Format::D32);
 		impl.Shadow->SetupProxyViews();
 		impl.ShadowFramebuffer = std::make_shared<Engine::FramebufferFactory>(impl.Device);
 		impl.ShadowFramebuffer->DepthTarget = impl.Shadow->GetTexture();
@@ -338,9 +381,14 @@ namespace FactoryCore
 		impl.LightingPass->Init(impl.Shaders);
 		impl.ForwardPass = std::make_unique<Render::ForwardShadingPass>(impl.Device, impl.Common);
 		impl.ForwardPass->Init(*impl.Shaders, {});
+		impl.ToneShader = impl.Shaders->CreateStaticShader({ g_FilmicToneMap_spirv, sizeof(g_FilmicToneMap_spirv) }, nullptr, nvrhi::ShaderType::Pixel);
+		nvrhi::BindingLayoutDesc toneLayout;
+		toneLayout.visibility = nvrhi::ShaderType::Pixel;
+		toneLayout.bindings = { nvrhi::BindingLayoutItem::PushConstants(0, 16), nvrhi::BindingLayoutItem::Texture_SRV(0) };
+		impl.ToneLayout = impl.Device->createBindingLayout(toneLayout);
 		impl.Resize(1280, 720);
 		impl.LoadScene();
-		SetEnvironment(impl.Assets / "Environments/StudioSmall09.hdr");
+		SetEnvironment(impl.Assets / "Environments/MachineShop02.hdr");
 	}
 
 	void SceneRenderer::SetEnvironment(const std::filesystem::path& path)
@@ -412,6 +460,7 @@ namespace FactoryCore
 
 	void SceneRenderer::Animate(float elapsedSeconds)
 	{
+		if (!m_Impl->AutomaticSimulation) return;
 		try { m_Impl->Session.Advance(std::min(static_cast<double>(elapsedSeconds), 1.0)); }
 		catch (const std::exception& error) { m_Impl->Error = error.what(); }
 	}
@@ -431,6 +480,13 @@ namespace FactoryCore
 	void SceneRenderer::RenderFrame(unsigned width, unsigned height, nvrhi::IFramebuffer* output)
 	{
 		auto& impl = *m_Impl;
+		impl.PickWidth = width;
+		impl.PickHeight = height;
+		if (output && impl.Settings.Supersampling && width <= 4096 && height <= 4096)
+		{
+			width *= 2;
+			height *= 2;
+		}
 		impl.Resize(width, height);
 		impl.Camera();
 		impl.LoadScene();
@@ -442,15 +498,18 @@ namespace FactoryCore
 		Render::InstancedOpaqueDrawStrategy opaque;
 		if (impl.Settings.Shadows)
 		{
-			impl.Shadow->SetupForPlanarViewStable(*impl.Sun, impl.View.GetProjectionFrustum(), impl.View.GetInverseViewMatrix(), 35.0f, 40.0f, 40.0f);
+			impl.Shadow->SetupForPlanarViewStable(
+				*impl.Sun, impl.View.GetProjectionFrustum(), impl.View.GetInverseViewMatrix(), 35.f, 40.f, 40.f);
 			impl.Shadow->Clear(impl.Commands);
 			Render::DepthPass::Context context;
-			Render::RenderCompositeView(impl.Commands, &impl.Shadow->GetView(), nullptr, *impl.ShadowFramebuffer, root, opaque, *impl.DepthPass, context, "Soft shadows");
+			Render::RenderCompositeView(impl.Commands, &impl.Shadow->GetView(), nullptr, *impl.ShadowFramebuffer, root, opaque,
+				*impl.DepthPass, context, "Soft shadows");
 		}
 		impl.Targets->Clear(impl.Commands);
-		impl.Commands->clearTextureFloat(impl.Hdr, nvrhi::AllSubresources, nvrhi::Color(0.0f));
+		impl.Commands->clearTextureFloat(impl.Hdr, nvrhi::AllSubresources, nvrhi::Color(.22f, .26f, .29f, 1.f));
 		Render::GBufferFillPass::Context gbuffer;
-		Render::RenderCompositeView(impl.Commands, &impl.View, &impl.View, *impl.Targets->GBufferFramebuffer, root, opaque, *impl.GBufferPass, gbuffer, "GBuffer");
+		Render::RenderCompositeView(
+			impl.Commands, &impl.View, &impl.View, *impl.Targets->GBufferFramebuffer, root, opaque, *impl.GBufferPass, gbuffer, "GBuffer");
 		if (impl.Settings.AmbientOcclusion)
 		{
 			Render::SsaoParameters params;
@@ -465,18 +524,42 @@ namespace FactoryCore
 		lighting.lightProbes = impl.Settings.ImageBasedLighting ? &impl.Probes : nullptr;
 		lighting.ambientOcclusion = impl.Settings.AmbientOcclusion ? impl.Occlusion.Get() : nullptr;
 		impl.LightingPass->Render(impl.Commands, impl.View, lighting);
-		if (impl.SkyPass) impl.SkyPass->Render(impl.Commands, impl.View);
+		if (impl.SkyPass && impl.Settings.ShowEnvironment)
+		{
+			impl.SkyPass->Render(impl.Commands, impl.View);
+		}
+		else
+		{
+			impl.BackgroundPass->Render(impl.Commands, impl.View);
+		}
 		Render::TransparentDrawStrategy transparent;
 		Render::ForwardShadingPass::Context forward;
-		impl.ForwardPass->PrepareLights(forward, impl.Commands, impl.Scene->GetSceneGraph()->GetLights(), 0.f, 0.f, impl.Settings.ImageBasedLighting ? impl.Probes : std::vector<std::shared_ptr<Engine::LightProbe>>{});
-		Render::RenderCompositeView(impl.Commands, &impl.View, nullptr, *impl.HdrFramebuffer, root, transparent, *impl.ForwardPass, forward, "Transparent glTF");
-		Render::ToneMappingParameters tone;
-		tone.exposureBias = impl.Settings.Exposure;
-		// Fixed luminance makes captures reproducible and preserves the exposure control.
-		tone.minAdaptedLuminance = tone.maxAdaptedLuminance = 0.5f;
-		impl.TonePass->AdvanceFrame(1.0f / 60.0f);
-		impl.TonePass->SimpleRender(impl.Commands, tone, impl.View, impl.Hdr);
-		if (output) impl.Common->BlitTexture(impl.Commands, output, impl.Ldr);
+		impl.ForwardPass->PrepareLights(forward, impl.Commands, impl.Scene->GetSceneGraph()->GetLights(), 0.f, 0.f,
+			impl.Settings.ImageBasedLighting ? impl.Probes : std::vector<std::shared_ptr<Engine::LightProbe>>{});
+		Render::RenderCompositeView(
+			impl.Commands, &impl.View, nullptr, *impl.HdrFramebuffer, root, transparent, *impl.ForwardPass, forward, "Transparent glTF");
+		struct ToneConstants
+		{
+			float Exposure;
+			unsigned Filmic;
+			float Padding[2];
+		};
+		static_assert(sizeof(ToneConstants) == 16);
+		const ToneConstants tone{std::exp2(impl.Settings.Exposure), impl.Settings.FilmicToneMapping ? 1u : 0u, {}};
+		nvrhi::GraphicsState toneState;
+		toneState.pipeline = impl.TonePipeline;
+		toneState.framebuffer = impl.LdrFramebuffer->GetFramebuffer(impl.View);
+		toneState.bindings = {impl.ToneBindings};
+		toneState.viewport = impl.View.GetViewportState();
+		impl.Commands->setGraphicsState(toneState);
+		impl.Commands->setPushConstants(&tone, sizeof(tone));
+		nvrhi::DrawArguments toneDraw;
+		toneDraw.vertexCount = 4;
+		impl.Commands->draw(toneDraw);
+		if (output)
+		{
+			impl.Common->BlitTexture(impl.Commands, output, impl.Ldr);
+		}
 		impl.Commands->close();
 		impl.Device->executeCommandList(impl.Commands);
 		++impl.Frame;
@@ -491,6 +574,45 @@ namespace FactoryCore
 			throw std::runtime_error("Cannot save renderer capture");
 	}
 
+	void SceneRenderer::SetCamera(glm::vec3 target, float yaw, float pitch, float distance)
+	{
+		if (!std::isfinite(target.x) || !std::isfinite(target.y) || !std::isfinite(target.z) || !std::isfinite(yaw) ||
+			!std::isfinite(pitch) || !std::isfinite(distance) || distance < .2f || distance > 150.f)
+		{
+			throw std::invalid_argument("Invalid camera");
+		}
+		m_Impl->Target = target;
+		m_Impl->Yaw = yaw;
+		m_Impl->Pitch = std::clamp(pitch, -1.4f, 1.4f);
+		m_Impl->Distance = distance;
+	}
+
+	void SceneRenderer::SetAutomaticSimulation(bool enabled)
+	{
+		m_Impl->AutomaticSimulation = enabled;
+	}
+
+	void SceneRenderer::CaptureQuality(const std::filesystem::path& path, unsigned width, unsigned height)
+	{
+		if (!width || !height || width > 4096 || height > 4096)
+		{
+			throw std::invalid_argument("Quality capture dimensions must be in [1, 4096]");
+		}
+		auto& impl = *m_Impl;
+		const auto oldWidth = impl.Width, oldHeight = impl.Height;
+		const auto pickWidth = impl.PickWidth, pickHeight = impl.PickHeight;
+		RenderFrame(width * 2, height * 2);
+		auto reduced = Texture(impl.Device, width, height, nvrhi::Format::SRGBA8_UNORM, "FactoryCore supersampled capture");
+		auto framebuffer = impl.Device->createFramebuffer(nvrhi::FramebufferDesc().addColorAttachment(reduced));
+		impl.Commands->open();
+		impl.Common->BlitTexture(impl.Commands, framebuffer, impl.Ldr);
+		impl.Commands->close();
+		impl.Device->executeCommandList(impl.Commands);
+		Capture(path, reduced);
+		RenderFrame(oldWidth, oldHeight);
+		impl.PickWidth = pickWidth;
+		impl.PickHeight = pickHeight;
+	}
 	void SceneRenderer::Orbit(float dx, float dy)
 	{
 		m_Impl->Yaw += dx * 0.005f;
@@ -512,33 +634,57 @@ namespace FactoryCore
 	{
 		const auto& impl = *m_Impl;
 		const auto inverse = glm::inverse(impl.Projection * impl.ViewMatrix);
-		const glm::vec2 clip(x * 2.0f / static_cast<float>(impl.Width) - 1.0f, 1.0f - y * 2.0f / static_cast<float>(impl.Height));
+		const glm::vec2 clip(x * 2.0f / static_cast<float>(impl.PickWidth) - 1.0f, 1.0f - y * 2.0f / static_cast<float>(impl.PickHeight));
 		auto start = inverse * glm::vec4(clip, 0.0f, 1.0f);
 		auto end = inverse * glm::vec4(clip, 1.0f, 1.0f);
-		start /= start.w; end /= end.w;
+		start /= start.w;
+		end /= end.w;
 		const glm::vec3 direction = glm::normalize(glm::vec3(end - start));
 		float nearest = std::numeric_limits<float>::max();
 		ComponentId selected = 0;
 		for (const auto& [id, node] : impl.Nodes)
 		{
-			const auto bounds = node->GetGlobalBoundingBox();
-			if (bounds.isempty()) continue;
-			float low = 0.0f, high = nearest;
-			for (int axis = 0; axis < 3 && low <= high; ++axis)
+			// Assemblies can surround other equipment. Test each mesh instead of the
+			// combined assembly bounds, so a gantry's empty space cannot hide a product.
+			for (Engine::SceneGraphWalker walker(node.get()); walker; walker.Next(true))
 			{
-				if (std::abs(direction[axis]) < 1.e-7f)
+				if (!std::dynamic_pointer_cast<Engine::MeshInstance>(walker->GetLeaf()))
 				{
-					if (start[axis] < bounds.m_mins[axis] || start[axis] > bounds.m_maxs[axis]) high = -1.0f;
+					continue;
 				}
-				else
+				const auto bounds = walker->GetGlobalBoundingBox();
+				if (bounds.isempty())
 				{
-					float a = (bounds.m_mins[axis] - start[axis]) / direction[axis];
-					float b = (bounds.m_maxs[axis] - start[axis]) / direction[axis];
-					if (a > b) std::swap(a, b);
-					low = std::max(low, a); high = std::min(high, b);
+					continue;
+				}
+				float low = 0.0f, high = nearest;
+				for (int axis = 0; axis < 3 && low <= high; ++axis)
+				{
+					if (std::abs(direction[axis]) < 1.e-7f)
+					{
+						if (start[axis] < bounds.m_mins[axis] || start[axis] > bounds.m_maxs[axis])
+						{
+							high = -1.0f;
+						}
+					}
+					else
+					{
+						float a = (bounds.m_mins[axis] - start[axis]) / direction[axis];
+						float b = (bounds.m_maxs[axis] - start[axis]) / direction[axis];
+						if (a > b)
+						{
+							std::swap(a, b);
+						}
+						low = std::max(low, a);
+						high = std::min(high, b);
+					}
+				}
+				if (low <= high && low < nearest)
+				{
+					nearest = low;
+					selected = id;
 				}
 			}
-			if (low <= high && low < nearest) { nearest = low; selected = id; }
 		}
 		return selected;
 	}
@@ -553,19 +699,54 @@ namespace FactoryCore
 	void SceneRenderer::CheckModel(const std::filesystem::path& path)
 	{
 		if (path.extension() != ".gltf" && path.extension() != ".glb")
+		{
 			throw std::invalid_argument("Visual models must be glTF (.gltf or .glb)");
-		auto textures = std::make_shared<Engine::TextureCache>(m_Impl->Device, m_Impl->FileSystem, nullptr);
-		auto candidate = std::make_shared<Engine::Scene>(m_Impl->Device, *m_Impl->Shaders, m_Impl->FileSystem, textures, nullptr, nullptr);
-		if (!candidate->Load(path) || candidate->GetSceneGraph()->GetMeshInstances().empty())
-			throw std::runtime_error("Model import failed or contains no mesh instances");
+		}
+		cgltf_options options{};
+		cgltf_data* parsed = nullptr;
+		const auto filename = path.string();
+		if (cgltf_parse_file(&options, filename.c_str(), &parsed) != cgltf_result_success)
+		{
+			throw std::runtime_error("Cannot parse glTF model");
+		}
+		std::unique_ptr<cgltf_data, decltype(&cgltf_free)> data(parsed, &cgltf_free);
+		if (cgltf_load_buffers(&options, data.get(), filename.c_str()) != cgltf_result_success ||
+			cgltf_validate(data.get()) != cgltf_result_success)
+		{
+			throw std::runtime_error("Invalid glTF geometry or missing buffers");
+		}
+		bool hasMesh = false;
+		for (std::size_t node = 0; node < data->nodes_count; ++node)
+		{
+			if (const auto* mesh = data->nodes[node].mesh)
+			{
+				for (std::size_t primitive = 0; primitive < mesh->primitives_count; ++primitive)
+				{
+					for (std::size_t attribute = 0; attribute < mesh->primitives[primitive].attributes_count; ++attribute)
+					{
+						const auto& value = mesh->primitives[primitive].attributes[attribute];
+						if (value.type == cgltf_attribute_type_position && value.data && value.data->count >= 3)
+						{
+							hasMesh = true;
+						}
+					}
+				}
+			}
+		}
+		if (!hasMesh)
+		{
+			throw std::runtime_error("Model contains no mesh geometry");
+		}
 		m_Impl->Topology.clear();
 		m_Impl->RejectedTopology.clear();
 	}
-
 	std::vector<MaterialInfo> SceneRenderer::GetMaterials(ComponentId id) const
 	{
 		auto found = m_Impl->Nodes.find(id);
-		if (found == m_Impl->Nodes.end()) return {};
+		if (found == m_Impl->Nodes.end())
+		{
+			return {};
+		}
 		std::set<int> indices;
 		std::vector<MaterialInfo> result;
 		for (Engine::SceneGraphWalker walker(found->second.get()); walker; walker.Next(true))

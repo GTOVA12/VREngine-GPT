@@ -13,9 +13,9 @@ All components have a Boolean Fault input and Fault/Active Boolean outputs plus 
 | Actuator | Enable (bool) | — | Symmetric configured on/off delay; interrupted transitions cancel |
 | Motor | Enable, Reverse (bool) | — | Speed target with acceleration/deceleration limit; integrates angular position |
 | Conveyor | Enable, Reverse (bool) | — | Speed target with acceleration/deceleration limit; integrates travel |
-| Workpiece | Enable (bool), Velocity (number) | — | Integrates commanded velocity while enabled |
+| Workpiece | Enable, Processed (bool), Velocity (number) | Processed (bool) | Integrates commanded velocity while enabled |
 
-Workpieces are enabled on creation. Sensor initial input is InitialPosition. Other command inputs start false or zero. These models are kinematic approximations: no collision solver, pneumatic pressure, friction, force coupling or physical workpiece contact is modeled. Connect Conveyor.Velocity to Workpiece.Velocity for transport.
+Workpieces are enabled on creation. Sensor initial input is InitialPosition. Other command inputs start false or zero. These models are kinematic approximations: no collision solver, pneumatic pressure, friction, force coupling or physical workpiece contact is modeled. Connect Conveyor.Velocity to Workpiece.Velocity for transport. Processed latches an inspection flag until Reset; the Processed Boolean output exposes it. The flag is live state and is excluded from configuration saves. See ProductCell.md for the cyclic simulated PLC example.
 
 An external Fault input or opposing cylinder commands latches a fault and stops motion. Fault causes must be cleared before ResetFault; cylinder commands must both be false. Faults do not clear automatically. Exceeding the simulation coordinate bound also latches an external fault. Emergency stop stops motion on the next Step without resetting position. Clearing emergency stop permits motion from current commands; controllers must implement their own restart policy. CylinderCycleController enters Faulted after emergency stop and requires explicit Start.
 

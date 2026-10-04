@@ -30,6 +30,8 @@ try {
         if ($GpuTests) {
             & .\Install\bin\FactoryCoreEditor.exe --smoke --capture Build/Testing/Installed-Editor.png
             if ($LASTEXITCODE -ne 0) { throw 'Installed renderer failed' }
+            & .\Install\bin\FactoryCoreEditor.exe --cell-test --capture Build/Testing/Installed-Cell/Editor-Complete.png
+            if ($LASTEXITCODE -ne 0) { throw 'Installed product cell test failed' }
         }
     }
     $factoryPackageDirectory = if ($CoreOnly) { "Build/Packages/Core" } else { "Build/Packages" }

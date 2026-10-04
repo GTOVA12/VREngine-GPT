@@ -1,0 +1,863 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "FactoryCore detailed cell asset generator"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Motion",
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "children": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "name": "Product housing",
+      "mesh": 0,
+      "translation": [
+        0,
+        0.0725,
+        0
+      ]
+    },
+    {
+      "name": "Product lid",
+      "mesh": 1,
+      "translation": [
+        0,
+        0.1535,
+        0
+      ]
+    },
+    {
+      "name": "Serial identification",
+      "mesh": 2,
+      "translation": [
+        -0.033,
+        0.1655,
+        0
+      ]
+    },
+    {
+      "name": "Lid screw",
+      "mesh": 3,
+      "translation": [
+        -0.105,
+        0.1685,
+        -0.085
+      ],
+      "rotation": [
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476
+      ]
+    },
+    {
+      "name": "Lid screw",
+      "mesh": 3,
+      "translation": [
+        -0.105,
+        0.1685,
+        0.085
+      ],
+      "rotation": [
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476
+      ]
+    },
+    {
+      "name": "Lid screw",
+      "mesh": 3,
+      "translation": [
+        0.105,
+        0.1685,
+        -0.085
+      ],
+      "rotation": [
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476
+      ]
+    },
+    {
+      "name": "Lid screw",
+      "mesh": 3,
+      "translation": [
+        0.105,
+        0.1685,
+        0.085
+      ],
+      "rotation": [
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476
+      ]
+    },
+    {
+      "name": "Processed",
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "children": [
+        9
+      ]
+    },
+    {
+      "name": "Inspection passed mark",
+      "mesh": 4,
+      "translation": [
+        0.075,
+        0.1665,
+        0
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Product housing",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 6
+        }
+      ]
+    },
+    {
+      "name": "Product lid",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Serial identification",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 12
+        }
+      ]
+    },
+    {
+      "name": "Lid screw",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12,
+            "NORMAL": 13,
+            "TEXCOORD_0": 14
+          },
+          "indices": 15,
+          "material": 1
+        }
+      ]
+    },
+    {
+      "name": "Inspection passed mark",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 16,
+            "NORMAL": 17,
+            "TEXCOORD_0": 18
+          },
+          "indices": 19,
+          "material": 7
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Satin machined aluminium",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.72,
+          0.76,
+          0.79,
+          1
+        ],
+        "metallicFactor": 0.88,
+        "roughnessFactor": 0.25,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "normalTexture": {
+        "index": 2,
+        "scale": 0.35
+      }
+    },
+    {
+      "name": "Brushed stainless steel",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.72,
+          0.76,
+          0.81,
+          1
+        ],
+        "metallicFactor": 0.96,
+        "roughnessFactor": 0.19
+      }
+    },
+    {
+      "name": "Graphite powder coat",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.035,
+          0.047,
+          0.06,
+          1
+        ],
+        "metallicFactor": 0.28,
+        "roughnessFactor": 0.44
+      }
+    },
+    {
+      "name": "Deep teal enclosure",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.035,
+          0.22,
+          0.245,
+          1
+        ],
+        "metallicFactor": 0.3,
+        "roughnessFactor": 0.31
+      }
+    },
+    {
+      "name": "Safety yellow",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.95,
+          0.57,
+          0.035,
+          1
+        ],
+        "metallicFactor": 0.08,
+        "roughnessFactor": 0.37
+      }
+    },
+    {
+      "name": "Textured conveyor rubber",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.79,
+        "baseColorTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "name": "Product ivory polymer",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.76,
+          0.75,
+          0.64,
+          1
+        ],
+        "metallicFactor": 0.04,
+        "roughnessFactor": 0.36
+      }
+    },
+    {
+      "name": "Status green",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.04,
+          0.7,
+          0.24,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.22
+      },
+      "emissiveFactor": [
+        0.02,
+        0.35,
+        0.08
+      ]
+    },
+    {
+      "name": "Alarm red",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.8,
+          0.018,
+          0.015,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.3
+      },
+      "emissiveFactor": [
+        0.3,
+        0.003,
+        0.002
+      ]
+    },
+    {
+      "name": "Protective polycarbonate",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5,
+          0.75,
+          0.84,
+          0.16
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.08
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true
+    },
+    {
+      "name": "Operator display",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.31,
+        "baseColorTexture": {
+          "index": 4
+        }
+      },
+      "emissiveTexture": {
+        "index": 4
+      },
+      "emissiveFactor": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "name": "Identification plate",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0.05,
+        "roughnessFactor": 0.45,
+        "baseColorTexture": {
+          "index": 5
+        }
+      }
+    },
+    {
+      "name": "Product identification",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.6,
+        "baseColorTexture": {
+          "index": 6
+        }
+      }
+    },
+    {
+      "name": "Workshop concrete",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0.03,
+        "roughnessFactor": 0.72,
+        "baseColorTexture": {
+          "index": 3
+        }
+      }
+    },
+    {
+      "name": "Blue pneumatic tube",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.025,
+          0.24,
+          0.55,
+          1
+        ],
+        "metallicFactor": 0.02,
+        "roughnessFactor": 0.34
+      }
+    }
+  ],
+  "images": [
+    {
+      "uri": "../Textures/CellMetal.png"
+    },
+    {
+      "uri": "../Textures/CellRubber.png"
+    },
+    {
+      "uri": "../Textures/CellNormal.png"
+    },
+    {
+      "uri": "../Textures/CellFloor.png"
+    },
+    {
+      "uri": "../Textures/CellPanel.png"
+    },
+    {
+      "uri": "../Textures/CellLabel.png"
+    },
+    {
+      "uri": "../Textures/ProductLabel.png"
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    },
+    {
+      "source": 4,
+      "sampler": 0
+    },
+    {
+      "source": 5,
+      "sampler": 0
+    },
+    {
+      "source": 6,
+      "sampler": 0
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "CellProduct.bin",
+      "byteLength": 84288
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3528,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 7056,
+      "byteLength": 2352,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 9408,
+      "byteLength": 5184,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 14592,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 18120,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 21648,
+      "byteLength": 2352,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 24000,
+      "byteLength": 5184,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 29184,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 32712,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 36240,
+      "byteLength": 2352,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 38592,
+      "byteLength": 5184,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 43776,
+      "byteLength": 6264,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 50040,
+      "byteLength": 6264,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 56304,
+      "byteLength": 4176,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 60480,
+      "byteLength": 9216,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 69696,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 73224,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 76752,
+      "byteLength": 2352,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 79104,
+      "byteLength": 5184,
+      "target": 34963
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -0.13,
+        -0.0725,
+        -0.11
+      ],
+      "max": [
+        0.13,
+        0.0725,
+        0.11
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 1296,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -0.1225,
+        -0.0085,
+        -0.10350000000000001
+      ],
+      "max": [
+        0.1225,
+        0.0085,
+        0.10350000000000001
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5125,
+      "count": 1296,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -0.065,
+        -0.003,
+        -0.035
+      ],
+      "max": [
+        0.065,
+        0.003,
+        0.035
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5125,
+      "count": 1296,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 522,
+      "type": "VEC3",
+      "min": [
+        -0.003,
+        -0.006,
+        -0.006
+      ],
+      "max": [
+        0.003,
+        0.006,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 522,
+      "type": "VEC3",
+      "min": [
+        -1,
+        -1.0,
+        -1.0
+      ],
+      "max": [
+        1,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 522,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5125,
+      "count": 2304,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -0.0225,
+        -0.0015,
+        -0.0225
+      ],
+      "max": [
+        0.0225,
+        0.0015,
+        0.0225
+      ]
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5125,
+      "count": 1296,
+      "type": "SCALAR"
+    }
+  ]
+}

@@ -2,7 +2,15 @@
 
 FactoryCore is a C++20 industrial machine simulation prototype with a Windows 3D editor, a separate runtime, reusable equipment, typed signals, built-in/Lua control and configuration persistence.
 
-Version 0.2.0 includes GLFW/NVRHI Vulkan rendering, GLM, glTF models/materials/textures, positioning gizmos, PBR, HDRI lighting, soft shadows, SSAO, HDR and tone mapping. See [editor usage](Docs/Editor.md), [feature status](Docs/Status.md) and [architecture](Docs/Architecture.md).
+Version 0.3.0 includes GLFW/NVRHI Vulkan rendering, GLM, glTF models/materials/textures, positioning gizmos, PBR, HDRI lighting, soft shadows, SSAO, HDR and tone mapping. See [editor usage](Docs/Editor.md), [feature status](Docs/Status.md) and [architecture](Docs/Architecture.md).
+
+## Assemble a machine and run its PLC
+
+The [FC-01 editor test](Docs/ProductCell.md) builds a detailed conveyor inspection cell from eight parts, connects its signals and runs a simulated PLC to clamp, process and discharge a product. It exports 4K images and a per-scan I/O trace.
+
+```powershell
+.\Install\bin\FactoryCoreEditor.exe --cell-test --capture Build/ProductCell/Editor-Complete.png
+```
 
 ## Build and launch the editor
 

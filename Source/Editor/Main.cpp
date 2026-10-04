@@ -1,5 +1,6 @@
 #include "SceneRenderer.h"
 #include "EditorUI.h"
+#include "ProductCellDemo.h"
 #ifdef FACTORYCORE_GPU_TESTS
 #include "EditorGuiSmoke.h"
 #endif
@@ -53,9 +54,27 @@ namespace
 		~LogResetGuard() { donut::log::ResetCallback(); }
 	};
 
+	struct DeviceManagerDeleter
+	{
+		void operator()(donut::app::DeviceManager* manager) const
+		{
+			if (!manager)
+			{
+				return;
+			}
+			if (auto* device = manager->GetDevice())
+			{
+				device->waitForIdle();
+			}
+			// Shutdown releases swapchain framebuffers before the native Vulkan device.
+			// The framework destructor alone does not preserve that order on exceptions.
+			manager->Shutdown();
+			delete manager;
+		}
+	};
 	class GraphicsMessages final : public nvrhi::IMessageCallback
 	{
-	public:
+	  public:
 		std::atomic<int> Errors{ 0 };
 		void message(nvrhi::MessageSeverity severity, const char* text) override
 		{
@@ -123,6 +142,7 @@ namespace
 			if (difference < 0.015) throw std::runtime_error(std::string(name) + " has no measurable effect on GPU output");
 			std::cout << "PASS " << name << " mean pixel difference " << difference << '\n';
 		};
+		checkFeature(renderer.GetSettings().FilmicToneMapping, "ACES filmic tone mapping");
 		checkFeature(renderer.GetSettings().AmbientOcclusion, "SSAO");
 		checkFeature(renderer.GetSettings().Shadows, "Soft shadows");
 		checkFeature(renderer.GetSettings().ImageBasedLighting, "HDRI image-based lighting");
@@ -166,6 +186,7 @@ int main(int argc, char** argv)
 		donut::log::SetCallback([&messages](donut::log::Severity severity, const char* message) { if (severity >= donut::log::Severity::Error) ++messages.Errors; std::cerr << message << std::endl; });
 		LogResetGuard logGuard;
 		bool smoke = false;
+		bool cellTest = false;
 #ifdef FACTORYCORE_GPU_TESTS
 		bool uiSmoke = false;
 #endif
@@ -183,6 +204,7 @@ int main(int argc, char** argv)
 				return argv[index];
 			};
 			if (argument == "--smoke") smoke = true;
+			else if (argument == "--cell-test") cellTest = true;
 #ifdef FACTORYCORE_GPU_TESTS
 			else if (argument == "--ui-smoke") uiSmoke = true;
 #endif
@@ -200,18 +222,20 @@ int main(int argc, char** argv)
 			else if (argument == "--help")
 			{
 				std::cout << "FactoryCoreEditor [--machine file.factory] [--assets directory] [--validation]\n"
-					<< "FactoryCoreEditor --smoke --capture output.png (headless Vulkan validation)\n";
+					<< "FactoryCoreEditor --cell-test --capture Build/ProductCell/Editor.png (assemble and run simulated PLC)\n" << "FactoryCoreEditor --smoke --capture output.png (headless Vulkan validation)\n";
 				return 0;
 			}
 			else throw std::invalid_argument("Unknown editor option: " + argument);
 		}
 		if (smoke && (!machinePath.empty() || frames)) throw std::invalid_argument("The smoke test uses the built-in demo; omit --machine and --frames");
+		if (cellTest && (smoke || !machinePath.empty() || frames)) throw std::invalid_argument("Cell test starts with an empty machine; omit --smoke, --machine and --frames");
 		if (assets.empty())
 		{
 			auto installed = std::filesystem::absolute(argv[0]).parent_path() / "../share/FactoryCore/Assets";
 			assets = std::filesystem::is_directory(installed) ? installed : std::filesystem::path(FACTORYCORE_ASSET_DIRECTORY);
 		}
 #ifdef FACTORYCORE_GPU_TESTS
+		if (cellTest && uiSmoke) throw std::invalid_argument("Choose either --cell-test or --ui-smoke");
 		if (uiSmoke)
 		{
 			if (capture.has_parent_path()) std::filesystem::create_directories(capture.parent_path());
@@ -219,8 +243,14 @@ int main(int argc, char** argv)
 			FactoryCore::SaveEditorMachine(Demo().GetConfiguration(), machinePath);
 		}
 #endif
-		FactoryCore::EditorSession session(machinePath.empty() ? Demo() : FactoryCore::LoadEditorMachine(machinePath));
-		std::unique_ptr<donut::app::DeviceManager> manager(donut::app::DeviceManager::Create(nvrhi::GraphicsAPI::VULKAN));
+		if (cellTest)
+		{
+			if (!capture.has_parent_path()) capture = std::filesystem::path("Build/ProductCell") / capture;
+			std::filesystem::create_directories(capture.parent_path());
+			machinePath = capture.parent_path() / "ProductInspectionCell.factory";
+		}
+		FactoryCore::EditorSession session(cellTest ? FactoryCore::Machine("FC-01 product inspection cell") : machinePath.empty() ? Demo() : FactoryCore::LoadEditorMachine(machinePath));
+		std::unique_ptr<donut::app::DeviceManager, DeviceManagerDeleter> manager(donut::app::DeviceManager::Create(nvrhi::GraphicsAPI::VULKAN));
 		donut::app::DeviceCreationParameters parameters;
 		parameters.enableNvrhiValidationLayer = true;
 		parameters.enableDebugRuntime = validation;
@@ -265,7 +295,15 @@ int main(int argc, char** argv)
 					};
 				}
 #endif
+				std::unique_ptr<FactoryCore::ProductCellDemo> cellDemo;
+				if (cellTest)
+				{
+					cellDemo = std::make_unique<FactoryCore::ProductCellDemo>(ui, session, renderer, machinePath, capture);
+					manager->m_callbacks.beforeFrame = [&](donut::app::DeviceManager& deviceManager, uint32_t) { cellDemo->BeforeFrame(deviceManager); };
+					manager->m_callbacks.afterRender = [&](donut::app::DeviceManager& deviceManager, uint32_t) { cellDemo->AfterRender(deviceManager); };
+				}
 				manager->RunMessageLoop();
+				if (cellDemo && !cellDemo->IsComplete()) throw std::runtime_error("Cell test closed before completing");
 #ifdef FACTORYCORE_GPU_TESTS
 				if (guiTest && !guiTest->IsComplete()) throw std::runtime_error("UI smoke test closed early");
 #endif
@@ -274,9 +312,9 @@ int main(int argc, char** argv)
 			}
 			manager->GetDevice()->waitForIdle();
 		}
-		manager->Shutdown();
+		manager.reset();
 		const int graphicsErrors = messages.Errors.load();
-		bool automatedRun = smoke || frames > 0 || validation;
+		bool automatedRun = smoke || cellTest || frames > 0 || validation;
 #ifdef FACTORYCORE_GPU_TESTS
 		automatedRun = automatedRun || uiSmoke;
 #endif

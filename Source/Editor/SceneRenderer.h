@@ -24,6 +24,9 @@ namespace FactoryCore
 
 	struct RenderSettings
 	{
+		bool FilmicToneMapping = true;
+		bool Supersampling = true;
+		bool ShowEnvironment = false;
 		bool AmbientOcclusion = true;
 		bool Shadows = true;
 		bool ImageBasedLighting = true;
@@ -43,6 +46,9 @@ namespace FactoryCore
 		void BackBufferResizing() override;
 		void RenderFrame(unsigned width, unsigned height, nvrhi::IFramebuffer* output = nullptr);
 		void Capture(const std::filesystem::path& path, nvrhi::ITexture* texture = nullptr);
+		void CaptureQuality(const std::filesystem::path& path, unsigned width = 3840, unsigned height = 2160);
+		void SetCamera(glm::vec3 target, float yaw, float pitch, float distance);
+		void SetAutomaticSimulation(bool enabled);
 		void SetEnvironment(const std::filesystem::path& path);
 		void Orbit(float dx, float dy);
 		void Pan(float dx, float dy);

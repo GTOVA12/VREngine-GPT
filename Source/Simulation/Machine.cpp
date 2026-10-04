@@ -93,6 +93,7 @@ namespace FactoryCore
 			case EquipmentKind::Workpiece:
 				signals.push_back({ "Enable", SignalType::Boolean });
 				signals.push_back({ "Velocity", SignalType::Number });
+				signals.push_back({ "Processed", SignalType::Boolean });
 				break;
 			default: throw std::invalid_argument("Unknown equipment kind");
 		}
@@ -116,7 +117,9 @@ namespace FactoryCore
 			case EquipmentKind::Actuator:
 			case EquipmentKind::Motor:
 			case EquipmentKind::Conveyor:
+				break;
 			case EquipmentKind::Workpiece:
+				signals.push_back({ "Processed", SignalType::Boolean });
 				break;
 			default: throw std::invalid_argument("Unknown equipment kind");
 		}
@@ -306,6 +309,7 @@ namespace FactoryCore
 		const auto& state = component.State;
 		if (endpoint.Signal == "Fault") return state.Fault != FaultCode::None;
 		if (endpoint.Signal == "Active" || endpoint.Signal == "Detected") return state.Active;
+		if (endpoint.Signal == "Processed") return state.Processed;
 		if (endpoint.Signal == "Position") return state.Position;
 		if (endpoint.Signal == "Velocity") return state.Velocity;
 		if (endpoint.Signal == "Extended") return state.Position >= component.Definition.Properties.Stroke;
@@ -401,6 +405,7 @@ namespace FactoryCore
 				break;
 			}
 			case EquipmentKind::Workpiece:
+				state.Processed = state.Processed || boolean("Processed");
 				state.Active = boolean("Enable");
 				state.Velocity = state.Active ? number("Velocity") : 0.0;
 				state.Position += state.Velocity * m_TimeStep;

@@ -32,6 +32,8 @@ namespace FactoryCore
 		return cycle ? std::optional<CycleState>(cycle->GetState()) : std::nullopt;
 	}
 
+	const ProductCellController* EditorSession::GetProductCellPLC() const { return dynamic_cast<const ProductCellController*>(m_Controller.get()); }
+
 	void EditorSession::RequireEditing() const
 	{
 		if (!IsEditing())

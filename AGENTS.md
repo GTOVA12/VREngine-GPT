@@ -18,6 +18,10 @@ The current deliverable is a working visual machine simulation with a separate c
 - EditorSession owns authored configuration, undo transactions and fixed-step playback. Stop restores the authored machine; save must never persist runtime-spawned objects or live inputs.
 - Save editor visual references relative to machine files, and keep glTF resource URIs relative to their asset files. Preserve imported material opacity and source assets when exporting changes.
 - Use GLM column-major camera matrices consistently with Donut row-major math. Donut quaternions take w,x,y,z; GLM fields are named explicitly. Keep picking and gizmo projection tests aligned with rendering.
-- Own GPU resources through NVRHI handles. Stage scene replacement, wait for safe GPU use before releasing resources, and clear raw-pointer binding caches when replacing scenes.
+- Own GPU resources through NVRHI handles. Stage scene replacement, wait for safe GPU use before releasing resources, and clear raw-pointer binding caches when replacing scenes. Release swapchain framebuffers before the Vulkan device on every shutdown path, including exceptions.
 - Pin all external archives and build tools to exact revisions and verified hashes. Ship their complete license notices and asset attribution.
 - Renderer changes require editor Debug/Release builds and local GPU/UI tests where hardware is available. Run Scripts/Verify.ps1 -GpuTests for the full Windows workflow; keep CI independent of GPU availability.
+- Keep cyclic PLC input/output images separate from equipment updates. Test interlocks, timers, latched faults, deterministic replay and interruption during motion/processing/discharge.
+- Validate model data on the CPU. Scene replacement loads synchronously before GPU publication; do not create throwaway GPU scenes for asset validation.
+- Preserve right-handed glTF world orientation and positive-forward Donut camera space with a reflected view that PlanarView tracks. Test picking after viewport supersampling and inspect text orientation in captures.
+- ProductCellEditor must start empty and build/wire through real editor mouse events. Render evidence must come from the running scene, including a held product and completed discharge.

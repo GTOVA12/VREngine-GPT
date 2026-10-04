@@ -1,0 +1,419 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "FactoryCore detailed cell asset generator"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Workshop floor",
+      "mesh": 0,
+      "translation": [
+        0,
+        -0.0225,
+        0
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Workshop floor",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 13
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Satin machined aluminium",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.72,
+          0.76,
+          0.79,
+          1
+        ],
+        "metallicFactor": 0.88,
+        "roughnessFactor": 0.25,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "normalTexture": {
+        "index": 2,
+        "scale": 0.35
+      }
+    },
+    {
+      "name": "Brushed stainless steel",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.72,
+          0.76,
+          0.81,
+          1
+        ],
+        "metallicFactor": 0.96,
+        "roughnessFactor": 0.19
+      }
+    },
+    {
+      "name": "Graphite powder coat",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.035,
+          0.047,
+          0.06,
+          1
+        ],
+        "metallicFactor": 0.28,
+        "roughnessFactor": 0.44
+      }
+    },
+    {
+      "name": "Deep teal enclosure",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.035,
+          0.22,
+          0.245,
+          1
+        ],
+        "metallicFactor": 0.3,
+        "roughnessFactor": 0.31
+      }
+    },
+    {
+      "name": "Safety yellow",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.95,
+          0.57,
+          0.035,
+          1
+        ],
+        "metallicFactor": 0.08,
+        "roughnessFactor": 0.37
+      }
+    },
+    {
+      "name": "Textured conveyor rubber",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.79,
+        "baseColorTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "name": "Product ivory polymer",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.76,
+          0.75,
+          0.64,
+          1
+        ],
+        "metallicFactor": 0.04,
+        "roughnessFactor": 0.36
+      }
+    },
+    {
+      "name": "Status green",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.04,
+          0.7,
+          0.24,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.22
+      },
+      "emissiveFactor": [
+        0.02,
+        0.35,
+        0.08
+      ]
+    },
+    {
+      "name": "Alarm red",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.8,
+          0.018,
+          0.015,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.3
+      },
+      "emissiveFactor": [
+        0.3,
+        0.003,
+        0.002
+      ]
+    },
+    {
+      "name": "Protective polycarbonate",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5,
+          0.75,
+          0.84,
+          0.16
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.08
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true
+    },
+    {
+      "name": "Operator display",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.31,
+        "baseColorTexture": {
+          "index": 4
+        }
+      },
+      "emissiveTexture": {
+        "index": 4
+      },
+      "emissiveFactor": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "name": "Identification plate",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0.05,
+        "roughnessFactor": 0.45,
+        "baseColorTexture": {
+          "index": 5
+        }
+      }
+    },
+    {
+      "name": "Product identification",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.6,
+        "baseColorTexture": {
+          "index": 6
+        }
+      }
+    },
+    {
+      "name": "Workshop concrete",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0.03,
+        "roughnessFactor": 0.72,
+        "baseColorTexture": {
+          "index": 3
+        }
+      }
+    },
+    {
+      "name": "Blue pneumatic tube",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.025,
+          0.24,
+          0.55,
+          1
+        ],
+        "metallicFactor": 0.02,
+        "roughnessFactor": 0.34
+      }
+    }
+  ],
+  "images": [
+    {
+      "uri": "../Textures/CellMetal.png"
+    },
+    {
+      "uri": "../Textures/CellRubber.png"
+    },
+    {
+      "uri": "../Textures/CellNormal.png"
+    },
+    {
+      "uri": "../Textures/CellFloor.png"
+    },
+    {
+      "uri": "../Textures/CellPanel.png"
+    },
+    {
+      "uri": "../Textures/CellLabel.png"
+    },
+    {
+      "uri": "../Textures/ProductLabel.png"
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    },
+    {
+      "source": 4,
+      "sampler": 0
+    },
+    {
+      "source": 5,
+      "sampler": 0
+    },
+    {
+      "source": 6,
+      "sampler": 0
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "CellFloor.bin",
+      "byteLength": 14592
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3528,
+      "byteLength": 3528,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 7056,
+      "byteLength": 2352,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 9408,
+      "byteLength": 5184,
+      "target": 34963
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -100.0,
+        -0.0225,
+        -100.0
+      ],
+      "max": [
+        100.0,
+        0.0225,
+        100.0
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC3",
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 294,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 1296,
+      "type": "SCALAR"
+    }
+  ]
+}

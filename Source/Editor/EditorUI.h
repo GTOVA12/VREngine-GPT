@@ -21,6 +21,7 @@ namespace FactoryCore
 		void PerformPending();
 		void Toolbar();
 		void EquipmentList();
+		void ProductCellPanel();
 		void Inspector();
 		void Wiring();
 		void Gizmo();

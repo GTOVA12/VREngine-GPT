@@ -1,6 +1,7 @@
 #include "EditorUI.h"
 #include "FactoryCore/Persistence.h"
 #include "FactoryCore/EditorFiles.h"
+#include "FactoryCore/ProductCellAssembly.h"
 #include <GLFW/glfw3.h>
 #ifdef FACTORYCORE_WITH_LUA
 #include "FactoryCore/ScriptController.h"
@@ -208,6 +209,7 @@ namespace FactoryCore
 					controller = std::move(script);
 				}
 #endif
+				if (m_ControlMode == 3) controller = std::make_unique<ProductCellController>(m_Session.GetMachine());
 				m_Session.Play(std::move(controller));
 			});
 		ImGui::EndDisabled();
@@ -225,9 +227,9 @@ namespace FactoryCore
 		ImGui::SetNextItemWidth(190);
 		ImGui::BeginDisabled(!m_Session.IsEditing());
 #ifdef FACTORYCORE_WITH_LUA
-		ImGui::Combo("Control", &m_ControlMode, "Manual\0Cylinder cycle\0Lua script\0");
+		ImGui::Combo("Control", &m_ControlMode, "Manual\0Cylinder cycle\0Lua script\0Cell simulated PLC\0");
 #else
-		ImGui::Combo("Control", &m_ControlMode, "Manual\0Cylinder cycle\0");
+		ImGui::Combo("Control", &m_ControlMode, "Manual\0Cylinder cycle\0Lua unavailable\0Cell simulated PLC\0");
 #endif
 		ImGui::EndDisabled();
 		ImGui::End();
@@ -279,6 +281,7 @@ namespace FactoryCore
 		if (Button("Delete")) Attempt([&] { m_Session.Edit([&](Machine& machine) { machine.Remove(m_Session.GetSelection()); }); });
 		ImGui::EndDisabled();
 		ImGui::Separator();
+		ProductCellPanel();
 		if (ImGui::CollapsingHeader("Reusable assembly"))
 		{
 			ImGui::InputText("Prefab file", m_PrefabPath.data(), m_PrefabPath.size());
@@ -315,6 +318,103 @@ namespace FactoryCore
 		ImGui::End();
 	}
 
+	void EditorUI::ProductCellPanel()
+	{
+		if (!ImGui::CollapsingHeader("Product handling cell", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			return;
+		}
+		ImGui::TextWrapped("FC-01 / simulated PLC / one product");
+		const auto parts = GetProductCellVisualParts(m_Renderer.GetAssetsDirectory());
+		const auto ids = m_Session.GetMachine().GetComponentIds();
+		auto missing = parts.end();
+		for (auto part = parts.begin(); part != parts.end(); ++part)
+		{
+			const bool installed = std::any_of(
+				ids.begin(), ids.end(), [&](ComponentId id) { return m_Session.GetMachine().GetDefinition(id).Name == part->Name; });
+			if (!installed)
+			{
+				missing = part;
+				break;
+			}
+		}
+		ImGui::BeginDisabled(!m_Session.IsEditing() || m_Session.HasTransaction());
+		if (missing != parts.end())
+		{
+			ImGui::TextWrapped("Next: %s", missing->Name.c_str());
+			if (Button("Add next cell part"))
+			{
+				Attempt(
+					[&]
+					{
+						m_Renderer.CheckModel(missing->VisualModel);
+						ComponentId created = 0;
+						m_Session.Edit([&](Machine& machine) { created = machine.Create(*missing); });
+						m_Session.Select(created);
+					});
+			}
+		}
+		else
+		{
+			std::vector<Connection> wires;
+			try
+			{
+				wires = GetProductCellConnections(m_Session.GetMachine());
+			}
+			catch (const std::exception& error)
+			{
+				ImGui::TextWrapped("%s", error.what());
+				ImGui::EndDisabled();
+				return;
+			}
+			auto wire = std::find_if(wires.begin(), wires.end(),
+				[&](const Connection& candidate)
+				{
+					const auto& connected = m_Session.GetMachine().GetConnections();
+					return std::find(connected.begin(), connected.end(), candidate) == connected.end();
+				});
+			if (wire != wires.end())
+			{
+				ImGui::TextWrapped("%s.%s -> %s.%s", m_Session.GetMachine().GetDefinition(wire->Source.Component).Name.c_str(),
+					wire->Source.Signal.c_str(), m_Session.GetMachine().GetDefinition(wire->Destination.Component).Name.c_str(),
+					wire->Destination.Signal.c_str());
+				if (Button("Wire next cell signal"))
+				{
+					Attempt([&] { m_Session.Edit([&](Machine& machine) { machine.Connect(*wire); }); });
+				}
+			}
+			else
+			{
+				ImGui::TextUnformatted("8 parts / 5 signal connections");
+				if (Button("Use cell PLC"))
+				{
+					m_ControlMode = 3;
+				}
+			}
+		}
+		ImGui::EndDisabled();
+		if (Button("Frame cell"))
+		{
+			m_Renderer.SetCamera({0.f, .90f, 0.f}, -.72f, .35f, 5.8f);
+			m_Session.Select(0);
+		}
+		if (const auto* plc = m_Session.GetProductCellPLC())
+		{
+			ImGui::Separator();
+			ImGui::TextColored(ImVec4(.35f, .90f, .76f, 1.f), "PLC: %s", ToString(plc->GetState()).data());
+			ImGui::Text("Scans %llu / products %u", static_cast<unsigned long long>(plc->GetScans()), plc->GetCompletedProducts());
+			const auto& io = plc->GetIO();
+			ImGui::Text("I: entry %d / station %d / exit %d", io.Entry, io.Station, io.Exit);
+			ImGui::Text("I: clamp %d / down %d / home %d", io.Clamped, io.Extended, io.Retracted);
+			ImGui::Text("Q: drive %d / clamp %d", io.Drive, io.Clamp);
+			ImGui::Text("Q: extend %d / retract %d", io.Extend, io.Retract);
+			ImGui::Text("Product inspected: %s", io.Processed ? "YES" : "pending");
+			if (!plc->GetFaultReason().empty())
+			{
+				ImGui::TextWrapped("%s", plc->GetFaultReason().c_str());
+			}
+		}
+	}
 	void EditorUI::Wiring()
 	{
 		const auto& machine = m_Session.GetMachine();
@@ -477,9 +577,12 @@ namespace FactoryCore
 		if (ImGui::CollapsingHeader("Lighting and display"))
 		{
 			auto& settings = m_Renderer.GetSettings();
+			ImGui::Checkbox("ACES filmic tone mapping", &settings.FilmicToneMapping);
+			ImGui::Checkbox("2x supersampling", &settings.Supersampling);
 			ImGui::Checkbox("SSAO", &settings.AmbientOcclusion);
 			ImGui::Checkbox("Soft shadows", &settings.Shadows);
 			ImGui::Checkbox("HDRI lighting", &settings.ImageBasedLighting);
+			ImGui::Checkbox("Show HDRI background", &settings.ShowEnvironment);
 			ImGui::SliderFloat("Exposure EV", &settings.Exposure, -5.f, 5.f);
 			ImGui::SliderFloat("AO radius", &settings.OcclusionRadius, .01f, 1.f);
 			ImGui::SliderFloat("Sun angle", &settings.SunAngle, .1f, 5.f);

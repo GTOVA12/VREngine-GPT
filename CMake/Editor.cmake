@@ -96,9 +96,18 @@ add_library(FactoryCoreGizmo STATIC "${fc_imguizmo_SOURCE_DIR}/src/ImGuizmo.cpp"
 target_include_directories(FactoryCoreGizmo SYSTEM PUBLIC "${fc_imguizmo_SOURCE_DIR}/src")
 target_link_libraries(FactoryCoreGizmo PUBLIC imgui)
 add_executable(FactoryCoreEditor Source/Editor/Main.cpp Source/Editor/SceneRenderer.cpp Source/Editor/EditorUI.cpp)
+include("${fc_donut_SOURCE_DIR}/compileshaders.cmake")
+donut_compile_shaders(TARGET FactoryCoreShaders
+	CONFIG "${PROJECT_SOURCE_DIR}/Source/Editor/Shaders/Shaders.cfg"
+	SOURCES Source/Editor/Shaders/FilmicToneMap.hlsl Source/Editor/Shaders/ACES.hlsli
+	OUTPUT_FORMAT HEADER SPIRV_DXC "${CMAKE_CURRENT_BINARY_DIR}/Shaders"
+	BYPRODUCTS_SPIRV FilmicToneMap.spirv.h
+	SHADERMAKE_OPTIONS --WX)
+add_dependencies(FactoryCoreEditor FactoryCoreShaders)
+target_include_directories(FactoryCoreEditor PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Shaders")
 target_link_libraries(FactoryCoreEditor PRIVATE FactoryCoreEditorModel donut_app donut_render donut_engine glm::glm FactoryCoreGizmo)
 target_include_directories(FactoryCoreEditor PRIVATE Source/Editor)
-target_include_directories(FactoryCoreEditor SYSTEM PRIVATE "${fc_stb_SOURCE_DIR}")
+target_include_directories(FactoryCoreEditor SYSTEM PRIVATE "${fc_stb_SOURCE_DIR}" "${fc_cgltf_SOURCE_DIR}")
 target_compile_definitions(FactoryCoreEditor PRIVATE GLM_ENABLE_EXPERIMENTAL FACTORYCORE_ASSET_DIRECTORY="${PROJECT_SOURCE_DIR}/Assets")
 if(FACTORYCORE_ENABLE_LUA)
 	target_link_libraries(FactoryCoreEditor PRIVATE FactoryCoreScripting)
@@ -112,8 +121,12 @@ if(BUILD_TESTING AND FACTORYCORE_GPU_TESTS)
 	target_include_directories(FactoryCoreEditor PRIVATE Tests)
 	add_test(NAME EditorUIWorkflow COMMAND FactoryCoreEditor --ui-smoke --capture "${CMAKE_BINARY_DIR}/Testing/FactoryCore-UI-$<CONFIG>.png")
 	set_tests_properties(EditorUIWorkflow PROPERTIES TIMEOUT 120)
+	add_test(NAME ProductCellEditor COMMAND FactoryCoreEditor --cell-test --capture "${CMAKE_BINARY_DIR}/Testing/ProductCell-$<CONFIG>/Editor-Complete.png")
+	set_tests_properties(ProductCellEditor PROPERTIES TIMEOUT 180)
 	add_test(NAME VulkanRendering COMMAND FactoryCoreEditor --smoke --capture "${CMAKE_BINARY_DIR}/Testing/FactoryCore-$<CONFIG>.png")
 	set_tests_properties(VulkanRendering PROPERTIES TIMEOUT 120)
+	add_test(NAME VulkanFailureCleanup COMMAND FactoryCoreEditor --frames 1 --assets "${CMAKE_BINARY_DIR}/MissingAssets")
+	set_tests_properties(VulkanFailureCleanup PROPERTIES WILL_FAIL TRUE TIMEOUT 30)
 endif()
 
 if(BUILD_TESTING)
@@ -151,3 +164,5 @@ string(SUBSTRING "${tinyexrSource}" ${minizStart} ${minizLength} minizNotice)
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/TinyEXR-Notice.txt"
 	"${tinyexrNotice}\nOpenEXR PIZ code: Copyright (c) 2004, Industrial Light & Magic, under the same BSD license above.\n\nEmbedded miniz:\n${minizNotice}")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/TinyEXR-Notice.txt" DESTINATION share/FactoryCore/Licenses RENAME TinyEXR.txt)
+
+install(FILES "${PROJECT_SOURCE_DIR}/Assets/Licenses/BakingLab.txt" DESTINATION share/FactoryCore/Licenses)

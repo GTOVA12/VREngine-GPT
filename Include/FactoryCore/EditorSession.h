@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FactoryCore/Controller.h"
+#include "FactoryCore/ProductCell.h"
 
 #include <functional>
 #include <memory>
@@ -29,6 +29,7 @@ namespace FactoryCore
 		bool IsModified() const;
 		void MarkSaved();
 		std::optional<CycleState> GetCycleState() const;
+		const ProductCellController* GetProductCellPLC() const;
 		bool HasTransaction() const { return m_Transaction.has_value(); }
 		std::uint64_t GetRevision() const { return m_Revision; }
 

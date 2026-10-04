@@ -4,6 +4,8 @@ Build with `cmake --preset editor` and `cmake --build --preset editor-release`. 
 
 The default scene contains all six equipment types. Press Play with Cylinder cycle selected to run the first cylinder repeatedly. Pause freezes simulation; Step advances one tick; Stop restores the authored configuration and removes entities spawned during playback. Use Manual control for inspector input commands or select Lua script to run the chosen script. The configured assembly file is registered with Lua as prefab `Assembly`.
 
+For an assembled conveyor/process station controlled by a simulated PLC, see [the FC-01 walkthrough and editor test](ProductCell.md). The --cell-test command builds from an empty scene and exports 4K images and a PLC trace.
+
 ## Authoring
 
 - Add equipment in Machine assembly, then select it in the list or viewport. Duplicate and Delete operate on the selection.

@@ -1,6 +1,6 @@
 # Product brief status
 
-Engine name: FactoryCore, chosen by the user. Current version: 0.2.0.
+Engine name: FactoryCore, chosen by the user. Current version: 0.3.0.
 
 ## Implemented prototype scope
 
@@ -12,10 +12,13 @@ Engine name: FactoryCore, chosen by the user. Current version: 0.2.0.
 - Lua update control, component lifecycle operations and registered prefab spawning.
 - GLFW window/input, NVRHI Vulkan rendering, GLM camera/transform math, ImGui controls and an ImGuizmo positioning gizmo.
 - glTF/GLB mesh import, PBR materials/textures and text-glTF material export.
-- Poly Haven HDRI IBL with diffuse irradiance, roughness-prefiltered specular lighting and a BRDF lookup; four-cascade filtered soft shadows; blurred SSAO; HDR targets and tone mapping.
+- Poly Haven HDRI IBL with diffuse irradiance, roughness-prefiltered specular lighting and a BRDF lookup; four-cascade filtered soft shadows; blurred SSAO; HDR targets and ACES fitted filmic tone mapping.
 - Undo/redo, grouped gizmo transactions, play/pause/step/stop, live signal/state inspection and protection for unsaved edits.
 - Debug/Release tests, automated UI/GPU checks, dependency hashes/notices, install/ZIP packaging and CI.
 - AGENTS.md and a repository simulation skill using Hazel naming.
+
+- Guided editor assembly of an eight-part product cell, cyclic simulated PLC, inspected-product state and per-scan trace.
+- Detailed beveled cell assets, 2x viewport supersampling and GPU-downsampled 4K captures; see [product cell](ProductCell.md).
 
 ## Qualification and later scope
 
