@@ -9,6 +9,14 @@
       "cacheVariables": {
         "BUILD_TESTING": "ON"
       }
+    },
+    {
+      "name": "editor",
+      "inherits": "windows",
+      "binaryDir": "${sourceDir}/Build/editor",
+      "cacheVariables": {
+        "FACTORYCORE_ENABLE_EDITOR": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -20,6 +28,16 @@
     {
       "name": "release",
       "configurePreset": "windows",
+      "configuration": "Release"
+    },
+    {
+      "name": "editor-debug",
+      "configurePreset": "editor",
+      "configuration": "Debug"
+    },
+    {
+      "name": "editor-release",
+      "configurePreset": "editor",
       "configuration": "Release"
     }
   ],
@@ -35,6 +53,22 @@
     {
       "name": "release",
       "configurePreset": "windows",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "editor-debug",
+      "configurePreset": "editor",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "editor-release",
+      "configurePreset": "editor",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true

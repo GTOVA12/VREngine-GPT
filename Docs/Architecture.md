@@ -1,13 +1,19 @@
 # Architecture
 
-FactoryCoreSimulation owns machine configurations, component identities, equipment state, named signals, fixed ticks and reusable assembly spawning. It has no graphics, operating-system control, scripting-language or networking dependency. Persistence has a small Windows-specific atomic replacement implementation isolated from equipment behavior.
+FactoryCoreSimulation owns configurations, component identities, equipment state, named signals, fixed ticks and assembly spawning. It has no graphics, scripting-language or networking dependency. Persistence isolates Windows atomic replacement from equipment behavior.
 
-FactoryCoreRuntime advances a machine for an explicit tick budget. An IController applies commands before each tick. CylinderCycleController implements a simulated PLC state machine; FactoryCoreScripting supplies an optional Lua controller. External PLC adapters, including OPC UA, can implement IController later, with transport and thread synchronization kept outside Machine.
+FactoryCoreRuntime advances machines for an explicit tick budget. An IController applies commands before each tick. CylinderCycleController supplies simulated PLC state transitions; FactoryCoreScripting supplies Lua with transactional tick edits. Future external PLC adapters can implement IController while keeping transport and synchronization outside Machine.
 
-FactoryCoreAuthor is the current file-based command-line authoring entry point. The strongly typed Machine API is the structured interface for native tools and agents. Commands validate input and save only after a successful operation. File writes use a sibling temporary file and atomic replacement.
+FactoryCoreAuthor exposes file-based commands. The strongly typed Machine API is the structured native interface for tools and agents. Commands validate changes before saving. A MachineDefinition is a reusable assembly: SpawnAssembly allocates fresh IDs, remaps internal wiring and applies placement offsets transactionally.
 
-A MachineDefinition is also a reusable assembly. SpawnAssembly validates its components and connections, allocates fresh component IDs, remaps internal connections and applies an offset transactionally. A single configuration can contain several spawned machines and represent a simple production-line layout. There is no specialized production-line scheduler or robot model yet.
+FactoryCoreEditorModel owns an EditorSession without graphics dependencies. Edits operate on a replacement machine before committing. Undo/redo store configuration snapshots; drag transactions group many placements into one history item. Playback retains a separate authored snapshot and advances fixed simulation ticks from frame elapsed time. Stop restores authoring configuration. EditorFiles saves visual references relative to the machine file and resolves them on loading.
 
-The future 3D editor is a separate executable consuming the same API. The requested stack is GLFW for window/input, NVRHI with Vulkan for GPU work and GLM for camera/transform math. VisualModel and Placement store render references and transforms now; the simulation never opens visual assets. Rendering derives animated positions from component state without mutating saved placement.
+FactoryCoreEditor owns GLFW, NVRHI/Vulkan, GLM, ImGui and ImGuizmo integration. SceneRenderer imports glTF into a separate render scene. Placement and live equipment state update render transforms without changing saved placement. Topology changes stage replacement scenes and clear obsolete GPU binding caches; texture caches belong to the active scene.
 
-Graphics work remains an implementation milestone: glTF loading and material validation, PBR, HDR environment lighting, soft shadows, SSAO, HDR render targets and tone mapping, plus a manipulation gizmo. It requires GPU validation, resize/device-loss handling, asset diagnostics and rendered-scene tests before release claims.
+NVIDIA Donut, built on NVRHI, supplies the glTF importer and rendering passes. The pipeline renders cascaded depth shadows, a deferred PBR GBuffer, blurred SSAO, diffuse/specular IBL, environment background and transparent geometry into HDR, followed by tone mapping into display color. Environment changes generate irradiance/specular maps and a BRDF texture once. Resizing rebuilds view-dependent resources after the GPU is idle.
+
+Source archives and the build-time DXC binary have exact revision/hash locks in CMake/Editor.cmake. Vulkan shaders are embedded. The installed editor resolves models, textures, HDRI and example files from share/FactoryCore; runtime asset loading requires no network connection.
+
+Core/session tests run without a window or GPU. Opt-in GPU tests compare feature-on/off captures, material round trips, visible motion and resize. The UI workflow test sends mouse events to real controls and verifies their effects. CI compiles the Windows editor while Linux jobs exercise the portable core with sanitizers.
+
+The Windows prototype reports import errors while retaining the previous scene. Device-loss recovery and a wider hardware qualification matrix remain production-hardening work.

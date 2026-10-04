@@ -1,7 +1,7 @@
 # FactoryCore development
 
 Read IndustrialSimulationEngine.md for product requirements. Work only in this repository.
-The current milestone is a working machine simulation. Read Docs/Status.md before claiming feature completion.
+The current deliverable is a working visual machine simulation with a separate core/runtime/editor. Read Docs/Status.md before claiming feature completion.
 
 - Use C++20 and CMake. Match Hazel naming: PascalCase types/functions/files/namespaces, camelCase locals/parameters, m_PascalCase private members, s_PascalCase static variables. Use tabs and Allman braces in C++.
 - Keep simulation independent of GLFW, NVRHI, Vulkan, GLM, Lua and editor state. Graphics and scripting consume validated simulation interfaces.
@@ -14,3 +14,10 @@ The current milestone is a working machine simulation. Read Docs/Status.md befor
 - Before committing, review the diff, build and run CTest in Debug and Release, run the sample runtime, and check installation. Never publish untested code as production-ready.
 - Inspect remote history before publishing; never force-push.
 - Use .agents/skills/factorycore-simulation for equipment, connections or persistence changes.
+
+- EditorSession owns authored configuration, undo transactions and fixed-step playback. Stop restores the authored machine; save must never persist runtime-spawned objects or live inputs.
+- Save editor visual references relative to machine files, and keep glTF resource URIs relative to their asset files. Preserve imported material opacity and source assets when exporting changes.
+- Use GLM column-major camera matrices consistently with Donut row-major math. Donut quaternions take w,x,y,z; GLM fields are named explicitly. Keep picking and gizmo projection tests aligned with rendering.
+- Own GPU resources through NVRHI handles. Stage scene replacement, wait for safe GPU use before releasing resources, and clear raw-pointer binding caches when replacing scenes.
+- Pin all external archives and build tools to exact revisions and verified hashes. Ship their complete license notices and asset attribution.
+- Renderer changes require editor Debug/Release builds and local GPU/UI tests where hardware is available. Run Scripts/Verify.ps1 -GpuTests for the full Windows workflow; keep CI independent of GPU availability.

@@ -1,12 +1,31 @@
 # FactoryCore
 
-FactoryCore is a C++20 industrial machine simulation prototype for Windows. This repository implements the first goal in [IndustrialSimulationEngine.md](IndustrialSimulationEngine.md): a small, working machine simulation with reusable equipment, typed signals, control logic and configuration persistence.
+FactoryCore is a C++20 industrial machine simulation prototype with a Windows 3D editor, a separate runtime, reusable equipment, typed signals, built-in/Lua control and configuration persistence.
 
-The current deliverable is headless. It includes a runtime and command-line authoring tool; the 3D editor and GLFW/NVRHI/Vulkan renderer are not implemented yet. See [feature status](Docs/Status.md) and [architecture](Docs/Architecture.md). Passing prototype tests does not establish production readiness.
+Version 0.2.0 includes GLFW/NVRHI Vulkan rendering, GLM, glTF models/materials/textures, positioning gizmos, PBR, HDRI lighting, soft shadows, SSAO, HDR and tone mapping. See [editor usage](Docs/Editor.md), [feature status](Docs/Status.md) and [architecture](Docs/Architecture.md).
+
+## Build and launch the editor
+
+Requirements: Visual Studio 2022 with Desktop development with C++, CMake 3.25+, and a Vulkan 1.3 GPU/driver supporting NVRHI's required features. First configuration downloads pinned dependencies into Build. No global dependency installation or Vulkan SDK is required.
+
+```powershell
+cmake --preset editor
+cmake --build --preset editor-release --parallel 6
+ctest --preset editor-release
+.\Build\editor\Release\FactoryCoreEditor.exe --machine Examples/CylinderCell.factory
+```
+
+For the full Debug/Release, GPU/UI test, installation and package workflow:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File Scripts/Verify.ps1 -GpuTests
+```
+
+The GPU checks require a local graphics device. Hosted CI compiles the editor and runs the non-GPU suite. The current prototype has passed local tests on Intel Arc 140T; broader driver testing and industrial deployment acceptance remain necessary. See [validation](Docs/Validation.md).
 
 ## Build and verify on Windows
 
-Requirements: Visual Studio 2022 with Desktop development with C++, CMake 3.24+, and internet access on the first Lua-enabled configuration. Dependencies are stored under Build; no global package installation is required.
+Requirements: Visual Studio 2022 with Desktop development with C++, CMake 3.25+, and internet access on the first Lua-enabled configuration. Dependencies are stored under Build; no global package installation is required.
 
 ```powershell
 cmake --preset windows
@@ -17,10 +36,10 @@ ctest --preset release
 .\Build\windows\Release\FactoryCoreRuntime.exe --demo
 ```
 
-Or run the complete build, test, installation and package workflow:
+For the graphics-independent workflow:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File Scripts/Verify.ps1
+powershell -ExecutionPolicy Bypass -File Scripts/Verify.ps1 -CoreOnly
 ```
 
 Use `-DFACTORYCORE_ENABLE_LUA=OFF` when configuring a simulation-only build without downloaded dependencies.
@@ -53,12 +72,12 @@ Commands also support remove, duplicate, disconnect and spawn. To spawn a saved 
 .\Build\windows\Release\FactoryCoreAuthor.exe spawn Build/MyCell.factory Examples/CylinderCell.factory 2 0 0
 ```
 
-IDs printed by add/duplicate/spawn remain stable across save/load. Parameters use metres, seconds, metres per second and radians; motor position and speed use radians and radians per second. Rotation values and visual-model paths are preserved for future rendering.
+IDs printed by add/duplicate/spawn remain stable across save/load. Parameters use metres, seconds, metres per second and radians; motor position and speed use radians and radians per second. Rotation values and visual-model paths are consumed by the editor.
 
 See [simulation contract](Docs/Simulation.md) for ports, fault semantics and timing, and [scripting](Docs/Scripting.md) for the Lua API.
 
 ## Dependency and publication notes
 
-Lua 5.5.1 comes from the official source archive with SHA-256 verification. Its license is included in installed packages. No graphics dependency is fetched by this milestone. The original product brief specifies GLFW, NVRHI, Vulkan and GLM for the future editor.
+Dependencies use official source archives and SHA-256 verification. Graphics builds additionally pin Donut, NVRHI, GLFW, GLM, ImGui, ImGuizmo and DXC. Shader binaries, default models/textures and the CC0 HDRI are packaged for offline runtime use. Full dependency notices accompany installed packages.
 
 The intended remote is [GTOVA12/VREngine-GPT](https://github.com/GTOVA12/VREngine-GPT). CI builds and tests Debug and Release on Windows and Linux; Windows is the initial supported development target. CI results should be checked separately from local verification.

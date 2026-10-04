@@ -1,26 +1,26 @@
 # Product brief status
 
-Engine name: FactoryCore, chosen by the user.
+Engine name: FactoryCore, chosen by the user. Current version: 0.2.0.
 
-## Implemented first milestone
+## Implemented prototype scope
 
-- C++20/CMake simulation library, separate runtime and file-based authoring tool.
-- Cylinders, sensors, actuators, motors, conveyors and workpieces with configurable properties, placement, visual-reference metadata, typed inputs/outputs and observable state.
-- Deterministic fixed-step simulation, built-in cylinder-cycle control, latched faults and emergency stop.
-- Creation, removal, duplication and reusable assembly spawning with internal wiring remapped.
-- Saving/loading configurations and composed production-line layouts, strict validation and atomic file replacement.
-- Lua OnUpdate control, component lifecycle operations and registered prefab spawning.
-- Unit and integration tests, Debug/Release presets, install/ZIP packaging and automated CI.
-- AGENTS.md and a repository-local development skill using Hazel naming conventions.
+- Separate C++20 simulation, command-line runtime/authoring tool, graphics-independent editor session and Windows 3D editor.
+- Cylinders, sensors, actuators, motors, conveyors and workpieces with generated visual models, configurable properties, placement, typed inputs/outputs and observable state.
+- Deterministic fixed-step simulation, built-in cylinder cycles, latched faults and emergency stop.
+- Component creation, deletion, duplication, reusable assemblies and remapped wiring.
+- Validated configuration persistence with atomic replacement and relocatable editor asset paths.
+- Lua update control, component lifecycle operations and registered prefab spawning.
+- GLFW window/input, NVRHI Vulkan rendering, GLM camera/transform math, ImGui controls and an ImGuizmo positioning gizmo.
+- glTF/GLB mesh import, PBR materials/textures and text-glTF material export.
+- Poly Haven HDRI IBL with diffuse irradiance, roughness-prefiltered specular lighting and a BRDF lookup; four-cascade filtered soft shadows; blurred SSAO; HDR targets and tone mapping.
+- Undo/redo, grouped gizmo transactions, play/pause/step/stop, live signal/state inspection and protection for unsaved edits.
+- Debug/Release tests, automated UI/GPU checks, dependency hashes/notices, install/ZIP packaging and CI.
+- AGENTS.md and a repository simulation skill using Hazel naming.
 
-## Remaining product work
+## Qualification and later scope
 
-- Actual visual models and a 3D editor with a positioning gizmo.
-- GLFW/NVRHI/Vulkan and GLM integration.
-- glTF mesh/material/texture import and asset management.
-- PBR materials, HDRI-based IBL, soft shadow maps, SSAO, HDR rendering and tone mapping.
-- Specialized production-line scheduling, robot models and external PLC/OPC UA adapters.
-- Scene-scale physics/contact models, persisted live sessions, installer signing and deployment validation in real industrial environments.
-- GPU tests, long-running soak tests and performance baselines before production-readiness claims.
+This is a working visual machine-simulation prototype. Real industrial deployment still requires broader hardware/driver testing, prolonged soak/performance qualification, device-loss recovery, installer/signing work and site-specific acceptance. Current GPU verification uses an Intel Arc 140T; it does not establish compatibility with every Vulkan device.
 
-The first milestone validates simulation and authoring workflows. It does not fulfill the complete 3D-platform vision.
+Production-line scheduling, robot models, external PLC/OPC UA adapters and contact physics remain later extensions, as anticipated by the brief. The current configuration can compose multiple assemblies into a line layout; its idealized equipment behavior does not implement a production-line scheduler.
+
+See [editor usage](Editor.md), [architecture](Architecture.md) and [verification record](Validation.md).

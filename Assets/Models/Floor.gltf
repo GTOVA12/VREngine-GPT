@@ -1,0 +1,282 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "FactoryCore asset generator"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Floor",
+      "mesh": 0,
+      "translation": [
+        0,
+        -0.03,
+        0
+      ],
+      "scale": [
+        30,
+        0.05,
+        30
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Floor",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 7
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Anodized aluminium",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.68,
+          0.73,
+          0.79,
+          1
+        ],
+        "metallicFactor": 0.85,
+        "roughnessFactor": 0.28,
+        "baseColorTexture": {
+          "index": 0
+        }
+      }
+    },
+    {
+      "name": "Steel",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.75,
+          0.8,
+          0.85,
+          1
+        ],
+        "metallicFactor": 0.95,
+        "roughnessFactor": 0.15
+      }
+    },
+    {
+      "name": "Safety yellow",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.95,
+          0.53,
+          0.045,
+          1
+        ],
+        "metallicFactor": 0.15,
+        "roughnessFactor": 0.35
+      }
+    },
+    {
+      "name": "Sensor green",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.04,
+          0.75,
+          0.2,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.3
+      },
+      "emissiveFactor": [
+        0.01,
+        0.2,
+        0.04
+      ]
+    },
+    {
+      "name": "Blue polymer",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.025,
+          0.24,
+          0.68,
+          1
+        ],
+        "metallicFactor": 0.05,
+        "roughnessFactor": 0.3
+      }
+    },
+    {
+      "name": "Belt rubber",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.75,
+        "baseColorTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "name": "Fault red",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.8,
+          0.02,
+          0.015,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.3
+      },
+      "emissiveFactor": [
+        0.8,
+        0.02,
+        0.015
+      ]
+    },
+    {
+      "name": "Floor grid",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 0.1,
+        "roughnessFactor": 0.8,
+        "baseColorTexture": {
+          "index": 2
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "uri": "../Textures/Brushed.png"
+    },
+    {
+      "uri": "../Textures/Belt.png"
+    },
+    {
+      "uri": "../Textures/Grid.png"
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "Floor.bin",
+      "byteLength": 840
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 288,
+      "byteLength": 288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 576,
+      "byteLength": 192,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 768,
+      "byteLength": 72,
+      "target": 34963
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3",
+      "min": [
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "max": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3",
+      "min": [
+        -1,
+        -1,
+        -1
+      ],
+      "max": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR"
+    }
+  ]
+}

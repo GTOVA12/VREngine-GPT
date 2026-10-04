@@ -1,24 +1,27 @@
-# Local verification — 2026-10-04
+# Local verification - 2026-10-04
 
-Environment: Windows x64, Visual Studio 2022, MSVC 19.44.35228, Windows SDK 10.0.26100.0.
+Version 0.2.0. Windows x64, Visual Studio 2022, MSVC 19.44.35228, Windows SDK 10.0.26100.0. GPU: Intel Arc 140T, driver 32.0.101.8860.
 
 | Check | Result |
 | --- | --- |
-| Debug build with warnings treated as errors | Passed |
-| Debug CTest, Lua enabled | 42/42 passed |
-| Release build with warnings treated as errors | Passed |
-| Release CTest, Lua enabled | 42/42 passed |
-| Independent Release build with Lua disabled | 40/40 passed |
-| Repository skill validation | Passed |
-| Staged whitespace/code-style review | Passed |
-| Installed runtime demonstration | Three complete cycles, 301 ticks, 3.01 seconds |
-| Installed authoring inspection | Passed |
-| CPack Windows x64 ZIP | Generated successfully |
+| Editor Debug build; project warnings treated as errors | Passed |
+| Editor Debug CTest with Lua and GPU tests | 46/46 passed |
+| Editor Release build; project warnings treated as errors | Passed |
+| Editor Release CTest with Lua and GPU tests | 46/46 passed |
+| Graphics-independent Debug and Release suites | 43/43 passed in each |
+| Lua-disabled Release suite | 41/41 passed |
+| Installed runtime demonstration | Three cycles, 301 ticks, 3.01 seconds |
+| Installed authoring tool | Passed |
+| Installed renderer using installed assets | Passed |
+| Windows editor ZIP | FactoryCore-0.2.0-win64.zip generated |
+| Rendered scene and editor captures | Visually inspected |
 
-Reviewed equipment bounds, signal direction/type/driver validation, sample timing, faults and reset behavior, identity management, transactional assembly/configuration operations, Lua exception boundaries and packaging.
+The GPU suite verifies nonblank output, GLM/Donut transform agreement through picking, visible cylinder motion, PBR material export/import, viewport resize and measurable differences when SSAO, shadow maps or IBL are disabled. On this device, mean byte differences were approximately 0.132 for SSAO, 0.205 for shadows and 29.046 for IBL.
 
-Review fixes are covered by regression checks: placement preserves live state, command controllers reject wired inputs before mutation, and Reset preserves the live session's component-ID high-water mark.
+The UI suite injects real mouse events to Add, Duplicate, Delete, Undo, Redo, Play, Pause, Step, Stop, Save, New and Open. It also verifies unsaved-change cancellation/discard. The session suite tests grouped transactions, rollback, fixed timing, overload handling, controller failures, selection and relocating machine/model files.
 
-The automated suite covers equipment motion, endpoint clamping, sensor hysteresis, actuator delays, motor acceleration, workpiece transport, faults/emergency stop, connection latency and feedback, deletion/duplication, assembly remapping, malformed/truncated/oversized files, write/read errors, deterministic replay, Lua lifecycle/prefabs/error rollback/instruction limits and command-line authoring.
+The core suite covers equipment behavior, typed signals/driver validation, sampled feedback latency, faults/emergency stop, identity/assemblies, malformed files and atomic saves. Lua tests cover lifecycle/prefabs, transactional failure and instruction budgets. Release checks use explicit assertions that remain active.
 
-GitHub CI is configured separately for Windows Debug/Release and a Linux sanitizer build. This local record does not assert remote CI results, GPU validation, industrial deployment qualification or completion of the 3D editor/renderer.
+Review addressed quaternion component ordering, GBuffer previous-view requirements, HDR cubemap depth, numeric ImGui input flags, swapchain color conversion, texture-cache lifetime, unsaved Open/save paths, material value/opacity preservation and atomic material publication.
+
+NVRHI validation is enabled in GPU runs and errors fail automated diagnostics. The optional Khronos Vulkan validation layers were not installed on this machine. CI compiles the Windows editor and runs its non-GPU tests; Linux core jobs use address/undefined-behavior sanitizers. Local passes do not establish all-device compatibility or industrial deployment qualification.
