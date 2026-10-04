@@ -1,0 +1,38 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [debug, release]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: cmake --preset windows
+      - run: cmake --build --preset ${{ matrix.configuration }}
+      - run: ctest --preset ${{ matrix.configuration }}
+      - if: matrix.configuration == 'release'
+        run: |
+          cmake --install Build/windows --config Release --prefix Install
+          .\Install\bin\FactoryCoreRuntime.exe --demo
+          cpack --config Build/windows/CPackConfig.cmake -C Release -B Build/Packages
+      - if: matrix.configuration == 'release'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: FactoryCore-Windows
+          path: Build/Packages/*.zip
+          if-no-files-found: error
+  portable-core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: cmake -S . -B Build/linux -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} -DFACTORYCORE_ENABLE_SANITIZERS=ON
+      - run: cmake --build Build/linux --parallel 2
+      - run: ctest --test-dir Build/linux --output-on-failure

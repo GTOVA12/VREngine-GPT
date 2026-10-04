@@ -1,0 +1,8 @@
+FACTORYCORE 1
+machine "Cylinder cell" 0.01
+components 2
+component 1 "Cylinder" Cylinder "" 0 0 0 0 0 0 1 1 1 0.2 0.4 1 0 0.5 0 0 1
+component 2 "End sensor" Sensor "" 0.2 0 0 0 0 0 1 1 1 1 1 1 0 0.2 0.01 0 1
+connections 1
+connection 1 "Position" 2 "Position"
+end
